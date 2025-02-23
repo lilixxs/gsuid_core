@@ -1,0 +1,117 @@
+# 自动构建 docker 镜像
+name: Docker Build and Compose
+
+# 参数配置为环境变量
+env:
+  # tag_prefix 软件包名称，通常为 docker hub 用户名/软件包名称
+  # tag_version docker 包版本，后续要实现自动打（可能得加 actions 里边的插件）
+  # dockerfile_path Dockerfile 路径
+  # build_branch 构建分支
+  tag_prefix: "lilixxs666/gsuid-core"
+  tag_version: "dev"
+  dockerfile_path: "Dockerfile"
+  build_branch: "master"
+  # 其他要指定的变量 DOCKER_USERNAME 和 DOCKER_PASSWORD 需要在仓库的 设置 --> secrets 里边配置
+  # DOCKER_USERNAME = docker hub 用户名
+  # DOCKER_PASSWORD = docker hub 密码
+
+on:
+  push:
+    branches:
+      - docker-autobuild
+  # 定时执行：每半天（12小时）执行一次
+  schedule:
+    - cron:  '0 */12 * * *'
+  workflow_dispatch:
+    # inputs:
+    #   sync_test_mode:
+    #     description: '仅测试输出... | Manual Mode...'
+    #     type: boolean
+    #     default: false
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ env.build_branch }}
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
+
+    - name: Install Docker and Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          apt-transport-https \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Show current files
+      run: |
+        echo "pwd = $(pwd)"
+        echo -------- ls -al --------------
+        ls -al
+        echo ------------------------------
+
+    # 不需要手动clone，actions/checkout@v2 已经自动 clone 了
+    # - name: Clone gsuid-core repository && branch
+    #   run: |
+    #     git clone -b master https://github.com/Genshin-bots/gsuid_core.git --depth=1 --single-branch
+    #     ls -al
+    #     chmod 777 -R gsuid_core
+
+    - name: 基础插件安装 (GenshinUID) | Clone GenshinUID plugin (v4)
+      run: |
+        echo "pwd = $(pwd)"
+        echo -------- ls -al --------------
+        ls -al
+        echo -----------------------------
+        [ -d ./gsuid_core/plugins ] && echo "plugin path exists, contine..." || mkdir -p ./gsuid_core/plugins
+        cd ./gsuid_core/plugins
+        git clone -b v4 https://github.com/KimigaiiWuyi/GenshinUID.git --depth=1 --single-branch
+
+    - name: login docker hub
+      run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: tag & push to docker hub
+      run: |
+        echo "pwd = $(pwd)"
+        echo -------- ls -al --------------
+        ls -al
+        echo -----------------------------
+        docker build -t ${{ env.tag_prefix }}:${{ env.tag_version }} -f ${{ env.dockerfile_path }} .
+        docker images
+
+    - name: export docker image
+      run: |
+        echo "pwd = $(pwd)"
+        echo -------- ls -al --------------
+        ls -al
+        echo -----------------------------
+        docker save -o gsuid-core.tar ${{ env.tag_prefix }}:${{ env.tag_version }}
+
+
+    # - name: Upload artifact (docker image)
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: docker-image-gsuid-core
+    #     path: gsuid-core.tar
+
+    - name: Push to Docker Hub
+      run: |
+        docker push ${{ env.tag_prefix }}:${{ env.tag_version }}
