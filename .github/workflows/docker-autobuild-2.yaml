@@ -56,11 +56,12 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ${{ env.tag_prefix }}
+            ${{ env.tag_prefix }},enable=true
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=schedule,enable=true,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
-            type=ref,event=workflow_dispatch,enable=true,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
+            type=schedule,enable=true,value=dev
+            type=ref,event=workflow_dispatch,enable=true,value=dev
+            type=raw,value=dev
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
