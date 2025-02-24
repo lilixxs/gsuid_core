@@ -59,8 +59,8 @@ jobs:
             ${{ env.tag_prefix }}
           # generate Docker tags based on the following events/attributes
           tags: |
-            type=schedule,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
-            type=ref,event=pr,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
+            type=schedule,enable=true,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
+            type=ref,event=workflow_dispatch,enable=true,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
