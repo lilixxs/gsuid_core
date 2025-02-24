@@ -107,7 +107,7 @@ jobs:
           echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
 
       - name: send messages to feishu
-        uses: Rollingegg/feishu-robot-action
+        uses: Rollingegg/feishu-robot-action@v1
         with:
           version: 2
           uuid: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
