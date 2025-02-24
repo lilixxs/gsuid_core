@@ -54,4 +54,61 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: ${{ env.need_push == true }}
-          tags: "${{ env.tag_prefix }}:${{ env.tag_version }}"
+          tags: |
+            type=schedule,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Tokyo'}},prefix=${{ env.tag_prefix }}
+
+      - name: push actions msgs to Feishu
+        uses: actions/feishu-notify@v1
+        with:
+          webhook: ${{ secrets.FEISHU_WEBHOOK }}
+          title: "Docker Build and Compose"
+          text: "Docker Build and Compose has been executed successfully."
+          message_type: "text"
+          atMobiles: "all"
+          atAll: true
+
+
+      - name: prepare messages for feishu sending
+        run: |
+          echo "::set-output name=content::post:
+            zh_cn:
+              title: 🤖 Github CI/CD 结果
+              content:
+              - - tag: text
+                  text: '工作流：'
+                - tag: text
+                  text: ${{ github.workflow }}
+              - - tag: text
+                  text: '仓库：'
+                - tag: text
+                  text: ${{ github.repository }}
+              - - tag: text
+                  text: '触发事件：'
+                - tag: text
+                  text: ${{ github.event_name }}
+              - - tag: text
+                  text: '--------------------------'
+              - - tag: text
+                  text: '执行结果'
+                - tag: text
+                  text: ${{ github.action_status }}
+          " > msg.yaml
+          echo msg.yaml
+
+      - name: convert msg from yaml to json
+        run: |
+          wget https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64 \
+          && chmod +x yq_linux_amd64 \
+          && mv yq_linux_amd64 /usr/local/bin/yq
+          yq eval -o json msg.yaml |tee msg.json
+          echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
+
+      - name: send messages to feishu
+        uses: Rollingegg/feishu-robot-action
+        with:
+          version: 2
+          uuid: 954e40d7-****-4111-****-649b5e0ba5f9
+          secret: UHbDROd****UZyvTyvwafe
+          json: |
+            ${{ env.MSG_JSON }}
+
