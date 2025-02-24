@@ -69,50 +69,65 @@ jobs:
             ${{ steps.docker_img_meta.outputs.tags }}
 
 
-      - name: prepare messages for feishu sending
-        run: |
-          echo "
-          msg_type: post
-          content:
-            post:
-              zh_cn:
-                title: 🤖 Github CI/CD 结果
-                content:
-                - - tag: text
-                    text: '工作流：'
-                  - tag: text
-                    text: ${{ github.workflow }}
-                - - tag: text
-                    text: '仓库：'
-                  - tag: text
-                    text: ${{ github.repository }}
-                - - tag: text
-                    text: '触发事件：'
-                  - tag: text
-                    text: ${{ github.event_name }}
-                - - tag: text
-                    text: '--------------------------'
-                - - tag: text
-                    text: '执行结果'
-                  - tag: text
-                    text: ${{ github.action_status }}
-          " > msg.yaml
-          echo msg.yaml
+      # - name: prepare messages for feishu sending
+      #   run: |
+      #     echo "
+      #     msg_type: post
+      #     content:
+      #       post:
+      #         zh_cn:
+      #           title: 🤖 Github CI/CD 结果
+      #           content:
+      #           - - tag: text
+      #               text: '工作流：'
+      #             - tag: text
+      #               text: ${{ github.workflow }}
+      #           - - tag: text
+      #               text: '仓库：'
+      #             - tag: text
+      #               text: ${{ github.repository }}
+      #           - - tag: text
+      #               text: '触发事件：'
+      #             - tag: text
+      #               text: ${{ github.event_name }}
+      #           - - tag: text
+      #               text: '--------------------------'
+      #           - - tag: text
+      #               text: '执行结果'
+      #             - tag: text
+      #               text: ${{ github.action_status }}
+      #     " > msg.yaml
+      #     echo msg.yaml
 
-      - name: convert msg from yaml to json
-        run: |
-          wget https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64 \
-          && chmod +x yq_linux_amd64 \
-          && mv yq_linux_amd64 /usr/local/bin/yq
-          yq eval -o json msg.yaml |tee msg.json
-          echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
+      # - name: convert msg from yaml to json
+      #   run: |
+      #     wget https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64 \
+      #     && chmod +x yq_linux_amd64 \
+      #     && mv yq_linux_amd64 /usr/local/bin/yq
+      #     yq eval -o json msg.yaml |tee msg.json
+      #     echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
 
-      - name: send messages to feishu
-        uses: Rollingegg/feishu-robot-action@v1
-        with:
-          version: 2
-          uuid: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
-          secret: ${{ secrets.FEISHU_BOT_AUTHKEY }}
-          json: |
-            ${{ env.MSG_JSON }}
+      # - name: send messages to feishu
+      #   uses: Rollingegg/feishu-robot-action@v1
+      #   with:
+      #     version: 2
+      #     uuid: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
+      #     secret: ${{ secrets.FEISHU_BOT_AUTHKEY }}
+      #     json: |
+      #       ${{ env.MSG_JSON }}
 
+
+      - name: Sending Feishu Message
+        uses: x-actions/feishu@main
+        env:
+          FEISHU_CUSTOMERBOT_WEBHOOK: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
+          FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_BOT_AUTHKEY }}
+          MSGTYPE: post
+          TITLE: "🤖 Github CI/CD 结果"
+          CONTENT: |
+            > 工作流：${{ github.workflow }}
+            > 仓库：${{ github.repository }}
+            > 触发事件：${{ github.event_name }}
+            > ----------------------
+            > 执行结果：OK-${{ github.action_status }}
+            > ^_^
