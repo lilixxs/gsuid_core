@@ -16,12 +16,14 @@ env:
   # DOCKER_PASSWORD = docker hub 密码
 
 on:
-  push:
-    branches:
-      - docker-autobuild
+  # docker-autobuild 分支 push 事件触发
+  # push:
+  #   branches:
+  #     - docker-autobuild
   # 定时执行：每半天（12小时）执行一次
   schedule:
     - cron:  '0 */12 * * *'
+  # 手动脚本
   workflow_dispatch:
     # inputs:
     #   sync_test_mode:

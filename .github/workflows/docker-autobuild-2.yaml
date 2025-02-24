@@ -53,5 +53,5 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          push: ${{ env.need_push }}
+          push: ${{ env.need_push == true }}
           tags: "${{ env.tag_prefix }}:${{ env.tag_version }}"
