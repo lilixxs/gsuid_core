@@ -16,18 +16,20 @@ env:
   # DOCKER_PASSWORD = docker hub 密码
 
 on:
-  push:
-    branches:
-      - docker-autobuild
+  # docker-autobuild 分支 push 事件触发
+  # push:
+  #   branches:
+  #     - docker-autobuild
   # 定时执行：每半天（12小时）执行一次
   schedule:
     - cron:  '0 */12 * * *'
+  # 手动脚本
   workflow_dispatch:
-    # inputs:
-    #   sync_test_mode:
-    #     description: '仅测试输出... | Manual Mode...'
-    #     type: boolean
-    #     default: false
+    inputs:
+      sync_test_mode:
+        description: '仅测试输出... | Manual Mode...'
+        type: boolean
+        default: false
 
 
 jobs:
@@ -88,7 +90,7 @@ jobs:
     - name: login docker hub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: tag & push to docker hub
+    - name: build & tag images
       run: |
         echo "pwd = $(pwd)"
         echo -------- ls -al --------------
@@ -105,13 +107,22 @@ jobs:
         echo -----------------------------
         docker save -o gsuid-core.tar ${{ env.tag_prefix }}:${{ env.tag_version }}
 
-
-    # - name: Upload artifact (docker image)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: docker-image-gsuid-core
-    #     path: gsuid-core.tar
-
     - name: Push to Docker Hub
+      if: ${{ inputs.sync_test_mode }} == false
       run: |
         docker push ${{ env.tag_prefix }}:${{ env.tag_version }}
+
+
+    - name: Sending Feishu Message
+      uses: x-actions/feishu@main
+      env:
+        FEISHU_CUSTOMERBOT_WEBHOOK: https://open.feishu.cn/open-apis/bot/v2/hook/${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
+        FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_BOT_AUTHKEY }}
+        MSGTYPE: text
+        TITLE: "🤖 Github CI/CD 结果"
+        CONTENT: |
+          > 工作流：${{ github.workflow }}
+          > 仓库：${{ github.repository }}
+          > 触发事件：${{ github.event_name }}
+          > ----------------------
+          > 执行结果：OK-${{ github.action_status }}
