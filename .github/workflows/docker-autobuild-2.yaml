@@ -44,10 +44,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.build_branch }}
+      - name: Checkout to branch -- ${{ env.build_branch }}
+        run: |
+          git checkout ${{ env.build_branch }}
+          sha=$(git rev-parse HEAD)
+          echo "DOCKER_METADATA_PR_HEAD_SHA=$sha" >> $GITHUB_ENV
 
       - name: Create Docker meta
         id: docker_img_meta
@@ -59,11 +60,6 @@ jobs:
           # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=dev-{{date 'YYYYMMDD'}}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.build_branch }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
