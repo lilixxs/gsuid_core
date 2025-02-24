@@ -23,9 +23,9 @@ on:
   workflow_dispatch:
     inputs:
       need_push:
-        description: '勾选则正式推送...'
+        description: '是否推送到dockerhub...'
         type: boolean
-        default: false
+        default: true
 
 
 jobs:
@@ -50,12 +50,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Create Docker meta
+        id: docker_img_meta
+        uses: docker/metadata-action@v5
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ${{ env.tag_prefix }}
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=schedule,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Shanghai'}}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           push: ${{ env.need_push == true }}
           tags: |
-            type=schedule,pattern=dev-{{date 'YYYYMMDD' tz='Asia/Tokyo'}},prefix=${{ env.tag_prefix }}
+            ${{ steps.docker_img_meta.outputs.tags }}
 
 
       - name: prepare messages for feishu sending
