@@ -119,7 +119,7 @@ jobs:
       - name: Sending Feishu Message
         uses: x-actions/feishu@main
         env:
-          FEISHU_CUSTOMERBOT_WEBHOOK: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
+          FEISHU_CUSTOMERBOT_WEBHOOK: https://open.feishu.cn/open-apis/bot/v2/hook/${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
           FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_BOT_AUTHKEY }}
           MSGTYPE: text
           TITLE: "🤖 Github CI/CD 结果"
