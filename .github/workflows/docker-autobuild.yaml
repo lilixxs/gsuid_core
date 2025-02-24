@@ -107,13 +107,21 @@ jobs:
         echo -----------------------------
         docker save -o gsuid-core.tar ${{ env.tag_prefix }}:${{ env.tag_version }}
 
-
-    # - name: Upload artifact (docker image)
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: docker-image-gsuid-core
-    #     path: gsuid-core.tar
-
     - name: Push to Docker Hub
       run: |
         docker push ${{ env.tag_prefix }}:${{ env.tag_version }}
+
+
+    - name: Sending Feishu Message
+      uses: x-actions/feishu@main
+      env:
+        FEISHU_CUSTOMERBOT_WEBHOOK: https://open.feishu.cn/open-apis/bot/v2/hook/${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
+        FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_BOT_AUTHKEY }}
+        MSGTYPE: text
+        TITLE: "🤖 Github CI/CD 结果"
+        CONTENT: |
+          > 工作流：${{ github.workflow }}
+          > 仓库：${{ github.repository }}
+          > 触发事件：${{ github.event_name }}
+          > ----------------------
+          > 执行结果：OK-${{ github.action_status }}
