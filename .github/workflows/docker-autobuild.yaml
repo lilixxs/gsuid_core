@@ -142,7 +142,7 @@ jobs:
         content:
           post:
             zh_cn:
-              title: 🤖 Github CI/CD 结果
+              title: '🤖 Github CI/CD 结果'
               content:
               - - tag: text
                   text: '工作流：'
@@ -161,7 +161,7 @@ jobs:
               - - tag: text
                   text: '执行结果'
                 - tag: text
-                  text: OK-${{ github.action_status }}
+                  text: 'OK-${{ github.action_status }}'
         " > msg.yaml
         echo msg.yaml
 
