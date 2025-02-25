@@ -1,5 +1,5 @@
 # 自动构建 docker 镜像
-name: Docker Build and Compose -> Alibaba ACR
+name: (test) Docker Build and Compose
 
 # 参数配置为环境变量
 env:
