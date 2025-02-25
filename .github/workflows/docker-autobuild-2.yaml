@@ -99,7 +99,7 @@ jobs:
                 - - tag: text
                     text: '执行结果'
                   - tag: text
-                    text: ${{ github.action_status }}
+                    text: OK-${{ github.action_status }}
           " > msg.yaml
           echo msg.yaml
 
@@ -109,7 +109,8 @@ jobs:
           && chmod +x yq_linux_amd64 \
           && mv yq_linux_amd64 /usr/local/bin/yq
           yq eval -o json msg.yaml |tee msg.json
-          echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
+          sed ':a;N;$!ba;s/\n//g;s/[[:space:]]\+/ /g' msg.json > msg_output.json
+          echo "MSG_JSON=$(cat msg_output.json)" >> $GITHUB_ENV
 
       - name: send messages to feishu
         uses: Rollingegg/feishu-robot-action@v1
