@@ -94,6 +94,7 @@ jobs:
         git clone -b v4 https://github.com/KimigaiiWuyi/GenshinUID.git --depth=1 --single-branch
 
     - name: login docker hub
+      if: ${{ inputs.test_no_compile == false || inputs.test_no_push == false}}
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: build & tag images
