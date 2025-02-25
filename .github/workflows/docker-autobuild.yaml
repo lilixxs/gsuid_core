@@ -47,11 +47,11 @@ jobs:
         ref: ${{ env.build_branch }}
 
     - name: Set up Docker
-      if: ${{ inputs.test_no_compile }} == false
+      if: ${{ inputs.test_no_compile == false }}
       uses: docker/setup-buildx-action@v2
 
     - name: Install Docker and Docker Compose
-      if: ${{ inputs.test_no_compile }} == false
+      if: ${{ inputs.test_no_compile == false }}
       run: |
         sudo apt-get update
         sudo apt-get install -y \
@@ -97,7 +97,7 @@ jobs:
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: build & tag images
-      if: ${{ inputs.test_no_compile }} == false
+      if: ${{ inputs.test_no_compile == false }}
       run: |
         echo "pwd = $(pwd)"
         echo -------- ls -al --------------
@@ -107,7 +107,7 @@ jobs:
         docker images
 
     - name: export docker image
-      if: ${{ inputs.test_no_compile }} == false
+      if: ${{ inputs.test_no_compile == false }}
       run: |
         echo "pwd = $(pwd)"
         echo -------- ls -al --------------
@@ -135,35 +135,35 @@ jobs:
           > ----------------------
           > 执行结果：OK-${{ github.action_status }}
 
-          - name: prepare messages for feishu sending
-          run: |
-            echo "
-            msg_type: post
-            content:
-              post:
-                zh_cn:
-                  title: 🤖 Github CI/CD 结果
-                  content:
-                  - - tag: text
-                      text: '工作流：'
-                    - tag: text
-                      text: ${{ github.workflow }}
-                  - - tag: text
-                      text: '仓库：'
-                    - tag: text
-                      text: ${{ github.repository }}
-                  - - tag: text
-                      text: '触发事件：'
-                    - tag: text
-                      text: ${{ github.event_name }}
-                  - - tag: text
-                      text: '--------------------------'
-                  - - tag: text
-                      text: '执行结果'
-                    - tag: text
-                      text: OK-${{ github.action_status }}
-            " > msg.yaml
-            echo msg.yaml
+    - name: prepare messages for feishu sending
+      run: |
+        echo "
+        msg_type: post
+        content:
+          post:
+            zh_cn:
+              title: 🤖 Github CI/CD 结果
+              content:
+              - - tag: text
+                  text: '工作流：'
+                - tag: text
+                  text: ${{ github.workflow }}
+              - - tag: text
+                  text: '仓库：'
+                - tag: text
+                  text: ${{ github.repository }}
+              - - tag: text
+                  text: '触发事件：'
+                - tag: text
+                  text: ${{ github.event_name }}
+              - - tag: text
+                  text: '--------------------------'
+              - - tag: text
+                  text: '执行结果'
+                - tag: text
+                  text: OK-${{ github.action_status }}
+        " > msg.yaml
+        echo msg.yaml
 
     - name: convert msg from yaml to json
       run: |
