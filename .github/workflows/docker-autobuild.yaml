@@ -1,5 +1,5 @@
 # 自动构建 docker 镜像
-name: Docker Build and Compose
+name: Docker Build -> gsuid-core
 
 # 参数配置为环境变量
 env:
@@ -121,21 +121,6 @@ jobs:
       run: |
         docker push ${{ env.tag_prefix }}:${{ env.tag_version }}
 
-
-    - name: Sending Feishu Message
-      uses: x-actions/feishu@main
-      env:
-        FEISHU_CUSTOMERBOT_WEBHOOK: https://open.feishu.cn/open-apis/bot/v2/hook/${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
-        FEISHU_CUSTOMERBOT_SECRET: ${{ secrets.FEISHU_BOT_AUTHKEY }}
-        MSGTYPE: text
-        TITLE: "🤖 Github CI/CD 结果"
-        CONTENT: |
-          > 工作流：${{ github.workflow }}
-          > 仓库：${{ github.repository }}
-          > 触发事件：${{ github.event_name }}
-          > ----------------------
-          > 执行结果：OK-${{ github.action_status }}
-
     - name: prepare messages for feishu sending
       run: |
         echo "
@@ -166,14 +151,14 @@ jobs:
         " > msg.yaml
         echo msg.yaml
 
-    - name: convert msg from yaml to json
+    - name: convert msg from yaml to json (json flattern)
       run: |
         wget https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64 \
         && chmod +x yq_linux_amd64 \
         && mv yq_linux_amd64 /usr/local/bin/yq
         yq eval -o json msg.yaml |tee msg.json
-        sed ':a;N;$!ba;s/\n//g;s/[[:space:]]\+/ /g' msg.json > msg_output.json
-        echo "MSG_JSON=$(cat msg_output.json)" >> $GITHUB_ENV
+        sed ':a;N;$!ba;s/\n//g;s/[[:space:]]\+/ /g' msg.json > msg.json
+        echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
 
     - name: send messages to feishu -- Bot test
       uses: Rollingegg/feishu-robot-action@v1
@@ -182,4 +167,4 @@ jobs:
         uuid: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
         secret: ${{ secrets.FEISHU_BOT_AUTHKEY }}
         json: |
-          ${{ env.MSG_JSON }}
+          "${{ env.MSG_JSON }}"
