@@ -149,16 +149,18 @@ jobs:
                 - tag: text
                   text: 'OK-${{ github.action_status }}'
         " > msg.yaml
-        echo msg.yaml
+        cat msg.yaml
 
-    - name: convert msg from yaml to json (json flattern)
+    - name: convert msg from yaml to json (pretty json)
+      # 下方 EOF 语法，用于传输多行文本到 action 的 ENV 环境变量中
       run: |
         wget https://github.com/mikefarah/yq/releases/download/v4.16.2/yq_linux_amd64 \
         && chmod +x yq_linux_amd64 \
         && mv yq_linux_amd64 /usr/local/bin/yq
         yq eval -o json msg.yaml |tee msg.json
-        sed ':a;N;$!ba;s/\n//g;s/[[:space:]]\+/ /g' msg.json > msg.json
-        echo "MSG_JSON=$(cat msg.json)" >> $GITHUB_ENV
+        echo 'MSG_JSON<<EOF' >> $GITHUB_ENV
+        cat msg.json >> $GITHUB_ENV
+        echo 'EOF' >> $GITHUB_ENV
 
     - name: send messages to feishu -- Bot test
       uses: Rollingegg/feishu-robot-action@v1
@@ -167,4 +169,4 @@ jobs:
         uuid: ${{ secrets.FEISHU_BOT_WEBSOCKET_ENDPOINT }}
         secret: ${{ secrets.FEISHU_BOT_AUTHKEY }}
         json: |
-          "${{ env.MSG_JSON }}"
+          ${{ env.MSG_JSON }}
